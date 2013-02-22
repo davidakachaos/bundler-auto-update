@@ -13,9 +13,22 @@ module Bundler
 
       # @return [String] Test command from @argv
       def test_command
-        if @argv.first == '-c'
-          @argv[1..-1].join(' ')
+        only_patch = only_minor = false
+        if @argv.include?('--only-patch')
+          @argv.delete('--only-path')
+          only_patch = true
         end
+        if @argv.include?('--only-minor')
+          @argv.delete('--only-minor')
+          only_patch = false
+          only_minor = true
+        end
+        if @argv.first == '-c'
+          @argv = @argv[1..-1].join(' ')
+        else
+          @argv = nil
+        end
+        return [@argv, only_patch, only_minor]
       end
     end # class CLI
 
@@ -24,13 +37,15 @@ module Bundler
 
       attr_reader :test_command
 
-      def initialize(test_command = nil)
+      def initialize(test_command = nil, only_patch = false, only_minor = false)
         @test_command = test_command || DEFAULT_TEST_COMMAND
+        @only_patch = only_patch
+        @only_minor = only_minor
       end
 
       def auto_update!
         gemfile.gems.each do |gem|
-          GemUpdater.new(gem, gemfile, test_command).auto_update
+          GemUpdater.new(gem, gemfile, test_command).auto_update(only_patch, only_minor)
         end
       end
 
@@ -49,10 +64,18 @@ module Bundler
       end
 
       # Attempt to update to patch, then to minor then to major versions.
-      def auto_update
+      def auto_update(only_patch = false, only_minor = false)
         if updatable?
           Logger.log "Updating #{gem.name}"
-          update(:patch) and update(:minor) and update(:major)
+          if only_patch
+            Logger.log "Only updating patch level"
+            update(:patch)
+          elsif only_minor
+            Logger.log "Only updating patch and minor"
+            update(:patch) and update(:minor)
+          else
+            update(:patch) and update(:minor) and update(:major)
+          end
         else
           Logger.log "#{gem.name} is not auto-updatable, passing it."
         end
@@ -95,7 +118,7 @@ module Bundler
       #
       # @return true on success, false on failure.
       def update_gemfile
-        if gemfile.update_gem(gem) 
+        if gemfile.update_gem(gem)
           Logger.log_indent "Gemfile updated successfully."
           true
         else
@@ -242,7 +265,7 @@ module Bundler
 
       # Return last version scoped at :version_type:.
       #
-      # Example: last_version(:patch), returns the last patch version 
+      # Example: last_version(:patch), returns the last patch version
       # for the current major/minor version
       #
       # @return [String] last version. Ex: '1.2.3'
