@@ -5,8 +5,8 @@ require "bundler_auto_update/version"
 Gem::Specification.new do |s|
   s.name        = "bundler-auto-update"
   s.version     = Bundler::AutoUpdate::VERSION
-  s.authors     = ["Philippe Creux"]
-  s.email       = ["pcreux@gmail.com"]
+  s.authors     = ["Philippe Creux", "David Westerink"]
+  s.email       = ["davidakachaos@gmail.com"]
   s.homepage    = ""
   s.summary     = %q{Auto update your Gemfile}
   s.description = %q{Attempt to update every single gem of your Gemfile to its latest patch, minor then major release. Runs a test command to ensure the update succeeded}
