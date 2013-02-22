@@ -35,7 +35,7 @@ module Bundler
     class Updater
       DEFAULT_TEST_COMMAND = "rake"
 
-      attr_reader :test_command
+      attr_reader :test_command, :only_patch, :only_minor
 
       def initialize(test_command = nil, only_patch = false, only_minor = false)
         @test_command = test_command || DEFAULT_TEST_COMMAND
